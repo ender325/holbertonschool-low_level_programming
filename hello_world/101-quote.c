@@ -1,15 +1,17 @@
-#include <unistd.h>
-#include <stdlib.h>
+#include "stdio.h"
+#include "string.h"
+#include "unistd.h"
+
 /**
- * main - Entry point
+ * main - Main program
  *
- * Return: Always 0 (Success)
+ * Return: 1
  */
+
+
 int main(void)
 {
-	int sout = 1;
-	int leng = 58;
+	write(1, "and that piece of art is useful\" - Dora Korpar, 2015-10-19\n", 59);
 
-	write(sout,  "and that piece of art is useful\" - Dora Korpar, 2015-10-19", leng);
 	return (1);
 }
