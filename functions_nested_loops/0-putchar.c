@@ -1,6 +1,6 @@
 #include <unistd.h>
 
-int _putchar(char c); /* This tells the compiler that _putchar exists */
+int _putchar(char c);
 
 /**
  * main - Entry point
