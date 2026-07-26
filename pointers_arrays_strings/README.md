@@ -1,0 +1,1 @@
+Holberton Coding School lesson: C - Pointers, arrays and strings
