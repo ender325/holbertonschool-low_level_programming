@@ -5,9 +5,8 @@
 #include <elf.h>
 
 void check_elf(unsigned char *e_ident);
-void print_magic_and_class(unsigned char *e_ident);
-void print_data_and_version(unsigned char *e_ident);
-void print_osabi_and_abi(unsigned char *e_ident);
+void print_magic_class_data(unsigned char *e_ident);
+void print_osabi_abi(unsigned char *e_ident);
 void print_type_and_entry(unsigned char *e_ident, unsigned int e_type,
 			  unsigned long e_entry);
 
@@ -28,127 +27,80 @@ void check_elf(unsigned char *e_ident)
 }
 
 /**
- * print_magic_and_class - Prints magic numbers and class of ELF header.
+ * print_magic_class_data - Prints magic, class, data, and version.
  * @e_ident: Pointer to ELF magic numbers array.
  */
-void print_magic_and_class(unsigned char *e_ident)
+void print_magic_class_data(unsigned char *e_ident)
 {
 	int i;
 
 	printf("ELF Header:\n  Magic:   ");
 	for (i = 0; i < EI_NIDENT; i++)
-	{
-		printf("%02x", e_ident[i]);
-		if (i == EI_NIDENT - 1)
-			printf("\n");
-		else
-			printf(" ");
-	}
+		printf("%02x%c", e_ident[i], i == EI_NIDENT - 1 ? '\n' : ' ');
 
 	printf("  %-35s", "Class:");
-	switch (e_ident[EI_CLASS])
-	{
-	case ELFCLASSNONE:
-		printf("none\n");
-		break;
-	case ELFCLASS32:
+	if (e_ident[EI_CLASS] == ELFCLASS32)
 		printf("ELF32\n");
-		break;
-	case ELFCLASS64:
+	else if (e_ident[EI_CLASS] == ELFCLASS64)
 		printf("ELF64\n");
-		break;
-	default:
-		printf("<unknown: %x>\n", e_ident[EI_CLASS]);
-	}
-}
-
-/**
- * print_data_and_version - Prints data encoding and version of ELF header.
- * @e_ident: Pointer to ELF magic numbers array.
- */
-void print_data_and_version(unsigned char *e_ident)
-{
-	printf("  %-35s", "Data:");
-	switch (e_ident[EI_DATA])
-	{
-	case ELFDATANONE:
+	else if (e_ident[EI_CLASS] == ELFCLASSNONE)
 		printf("none\n");
-		break;
-	case ELFDATA2LSB:
-		printf("2's complement, little endian\n");
-		break;
-	case ELFDATA2MSB:
-		printf("2's complement, big endian\n");
-		break;
-	default:
-		printf("<unknown: %x>\n", e_ident[EI_DATA]);
-	}
+	else
+		printf("<unknown: %x>\n", e_ident[EI_CLASS]);
 
-	printf("  %-35s", "Version:");
-	switch (e_ident[EI_VERSION])
-	{
-	case EV_CURRENT:
-		printf("1 (current)\n");
-		break;
-	default:
-		printf("%d\n", e_ident[EI_VERSION]);
-	}
+	printf("  %-35s", "Data:");
+	if (e_ident[EI_DATA] == ELFDATA2LSB)
+		printf("2's complement, little endian\n");
+	else if (e_ident[EI_DATA] == ELFDATA2MSB)
+		printf("2's complement, big endian\n");
+	else if (e_ident[EI_DATA] == ELFDATANONE)
+		printf("none\n");
+	else
+		printf("<unknown: %x>\n", e_ident[EI_DATA]);
+
+	printf("  %-35s%d%s", "Version:", e_ident[EI_VERSION],
+	       e_ident[EI_VERSION] == EV_CURRENT ? " (current)\n" : "\n");
 }
 
 /**
- * print_osabi_and_abi - Prints OS/ABI and ABI version of ELF header.
+ * print_osabi_abi - Prints OS/ABI and ABI version.
  * @e_ident: Pointer to ELF magic numbers array.
  */
-void print_osabi_and_abi(unsigned char *e_ident)
+void print_osabi_abi(unsigned char *e_ident)
 {
+	unsigned char osabi = e_ident[EI_OSABI];
+
 	printf("  %-35s", "OS/ABI:");
-	switch (e_ident[EI_OSABI])
-	{
-	case ELFOSABI_NONE:
+	if (osabi == ELFOSABI_NONE)
 		printf("UNIX - System V\n");
-		break;
-	case ELFOSABI_HPUX:
+	else if (osabi == ELFOSABI_HPUX)
 		printf("UNIX - HP-UX\n");
-		break;
-	case ELFOSABI_NETBSD:
+	else if (osabi == ELFOSABI_NETBSD)
 		printf("UNIX - NetBSD\n");
-		break;
-	case ELFOSABI_GNU:
+	else if (osabi == ELFOSABI_GNU)
 		printf("UNIX - GNU\n");
-		break;
-	case ELFOSABI_SOLARIS:
+	else if (osabi == ELFOSABI_SOLARIS)
 		printf("UNIX - Solaris\n");
-		break;
-	case ELFOSABI_AIX:
+	else if (osabi == ELFOSABI_AIX)
 		printf("UNIX - AIX\n");
-		break;
-	case ELFOSABI_IRIX:
+	else if (osabi == ELFOSABI_IRIX)
 		printf("UNIX - IRIX\n");
-		break;
-	case ELFOSABI_FREEBSD:
+	else if (osabi == ELFOSABI_FREEBSD)
 		printf("UNIX - FreeBSD\n");
-		break;
-	case ELFOSABI_TRU64:
+	else if (osabi == ELFOSABI_TRU64)
 		printf("UNIX - TRU64\n");
-		break;
-	case ELFOSABI_MODESTO:
+	else if (osabi == ELFOSABI_MODESTO)
 		printf("Novell - Modesto\n");
-		break;
-	case ELFOSABI_OPENBSD:
+	else if (osabi == ELFOSABI_OPENBSD)
 		printf("UNIX - OpenBSD\n");
-		break;
-	case ELFOSABI_ARM_AEABI:
+	else if (osabi == ELFOSABI_ARM_AEABI)
 		printf("ARM - EABI\n");
-		break;
-	case ELFOSABI_ARM:
+	else if (osabi == ELFOSABI_ARM)
 		printf("ARM\n");
-		break;
-	case ELFOSABI_STANDALONE:
+	else if (osabi == ELFOSABI_STANDALONE)
 		printf("Standalone App\n");
-		break;
-	default:
-		printf("<unknown: %x>\n", e_ident[EI_OSABI]);
-	}
+	else
+		printf("<unknown: %x>\n", osabi);
 
 	printf("  %-35s%d\n", "ABI Version:", e_ident[EI_ABIVERSION]);
 }
@@ -162,48 +114,43 @@ void print_osabi_and_abi(unsigned char *e_ident)
 void print_type_and_entry(unsigned char *e_ident, unsigned int e_type,
 			  unsigned long e_entry)
 {
+	int i;
+	unsigned long res = 0;
+
 	if (e_ident[EI_DATA] == ELFDATA2MSB)
-		e_type >>= 8;
+	{
+		e_type = (e_type >> 8) | (e_type << 8);
+		if (e_ident[EI_CLASS] == ELFCLASS32)
+		{
+			e_entry = ((e_entry & 0x000000FF) << 24) |
+				  ((e_entry & 0x0000FF00) << 8) |
+				  ((e_entry & 0x00FF0000) >> 8) |
+				  ((e_entry & 0xFF000000) >> 24);
+		}
+		else
+		{
+			for (i = 0; i < 8; i++)
+			{
+				res = (res << 8) | (e_entry & 0xFF);
+				e_entry >>= 8;
+			}
+			e_entry = res;
+		}
+	}
 
 	printf("  %-35s", "Type:");
-	switch (e_type)
-	{
-	case ET_NONE:
+	if (e_type == ET_NONE)
 		printf("NONE (None)\n");
-		break;
-	case ET_REL:
+	else if (e_type == ET_REL)
 		printf("REL (Relocatable file)\n");
-		break;
-	case ET_EXEC:
+	else if (e_type == ET_EXEC)
 		printf("EXEC (Executable file)\n");
-		break;
-	case ET_DYN:
+	else if (e_type == ET_DYN)
 		printf("DYN (Shared object file)\n");
-		break;
-	case ET_CORE:
+	else if (e_type == ET_CORE)
 		printf("CORE (Core file)\n");
-		break;
-	default:
+	else
 		printf("<unknown: %x>\n", e_type);
-	}
-
-	if (e_ident[EI_DATA] == ELFDATA2MSB)
-	{
-		if (e_ident[EI_CLASS] == ELFCLASS32)
-			e_entry = ((e_entry << 24) & 0xFF000000) |
-				  ((e_entry << 8) & 0x00FF0000) |
-				  ((e_entry >> 8) & 0x0000FF00) |
-				  ((e_entry >> 24) & 0x000000FF);
-		else
-			e_entry = ((e_entry << 56) & 0xFF00000000000000ULL) |
-				  ((e_entry << 40) & 0x00FF000000000000ULL) |
-				  ((e_entry << 24) & 0x0000FF0000000000ULL) |
-				  ((e_entry << 8) & 0x000000FF00000000ULL) |
-				  ((e_entry >> 8) & 0x00000000FF000000ULL) |
-				  ((e_entry >> 24) & 0x0000000000FF0000ULL) |
-				  ((e_entry >> 40) & 0x000000000000FF00ULL) |
-				  ((e_entry >> 56) & 0x00000000000000FFULL);
-	}
 
 	printf("  %-35s0x%lx\n", "Entry point address:", e_entry);
 }
@@ -246,9 +193,8 @@ int main(int argc, char *argv[])
 	}
 
 	check_elf(header.e_ident);
-	print_magic_and_class(header.e_ident);
-	print_data_and_version(header.e_ident);
-	print_osabi_and_abi(header.e_ident);
+	print_magic_class_data(header.e_ident);
+	print_osabi_abi(header.e_ident);
 
 	if (header.e_ident[EI_CLASS] == ELFCLASS32)
 	{
