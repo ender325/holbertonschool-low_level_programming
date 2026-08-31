@@ -1,36 +1,48 @@
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/uio.h>
-#include <unistd.h>
 #include <fcntl.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include "main.h"
 
 /**
- * append_text_to_file - appends text to a file
- * @filename: the filename to open and append to
- * @text_content: text to append onto new file
+ * append_text_to_file - Appends text at the end of a file.
+ * @filename: Name of the file.
+ * @text_content: NULL-terminated string to add at the end of the file.
  *
- * Return: 1 on success, -1 on failure (file can not be created, or written,
- * or write fails, etc).
+ * Return: 1 on success, -1 on failure.
  */
 int append_text_to_file(const char *filename, char *text_content)
 {
-	int fd, err, len;
+	int fd, bytes_written, len = 0;
 
-	if (!filename)
+	if (filename == NULL)
 		return (-1);
-	fd = open(filename, O_RDWR | O_APPEND);
-	if (fd < 0) /* failed opening file */
-		return (-1);
-	if (!text_content)
-	{ /* there is a file, but no new content to write to it */
-		close(fd);
-		return (1);
+
+	/* Calculate string length if text_content is provided */
+	if (text_content != NULL)
+	{
+		while (text_content[len] != '\0')
+			len++;
 	}
-	while (*(text_content + len))
-		len++;
-	err = write(fd, text_content, len);
-	close(fd);
-	if (err < 0)
+
+	/*
+	 * O_WRONLY: Open for writing only
+	 * O_APPEND: Append data to the end of the file
+	 * (O_CREAT is omitted so it will fail if the file does not exist)
+	 */
+	fd = open(filename, O_WRONLY | O_APPEND);
+	if (fd == -1)
 		return (-1);
+
+	if (text_content != NULL)
+	{
+		bytes_written = write(fd, text_content, len);
+		if (bytes_written != len)
+		{
+			close(fd);
+			return (-1);
+		}
+	}
+
+	close(fd);
 	return (1);
 }
