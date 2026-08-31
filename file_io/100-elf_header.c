@@ -7,8 +7,8 @@
 void check_elf(unsigned char *e_ident);
 void print_magic_class_data(unsigned char *e_ident);
 void print_osabi_abi(unsigned char *e_ident);
-void print_type_entry(unsigned char *e_ident, unsigned int e_type,
-		      unsigned long e_entry);
+void print_type_and_entry(unsigned char *e_ident, unsigned int e_type,
+			  unsigned long e_entry);
 
 /**
  * check_elf - Checks if a file is an ELF file.
@@ -36,8 +36,7 @@ void print_magic_class_data(unsigned char *e_ident)
 
 	printf("ELF Header:\n  Magic:   ");
 	for (i = 0; i < EI_NIDENT; i++)
-		printf("%02x ", e_ident[i]);
-	printf("\n");
+		printf("%02x%c", e_ident[i], i == EI_NIDENT - 1 ? '\n' : ' ');
 
 	printf("  %-35s", "Class:");
 	if (e_ident[EI_CLASS] == ELFCLASS32)
@@ -59,11 +58,8 @@ void print_magic_class_data(unsigned char *e_ident)
 	else
 		printf("<unknown: %x>\n", e_ident[EI_DATA]);
 
-	printf("  %-35s", "Version:");
-	if (e_ident[EI_VERSION] == EV_CURRENT)
-		printf("1 (current)\n");
-	else
-		printf("%d\n", e_ident[EI_VERSION]);
+	printf("  %-35s%d%s", "Version:", e_ident[EI_VERSION],
+	       e_ident[EI_VERSION] == EV_CURRENT ? " (current)\n" : "\n");
 }
 
 /**
@@ -110,34 +106,33 @@ void print_osabi_abi(unsigned char *e_ident)
 }
 
 /**
- * print_type_entry - Prints file type and entry point address.
+ * print_type_and_entry - Prints file type and entry point address.
  * @e_ident: Pointer to ELF magic numbers array.
  * @e_type: ELF type.
  * @e_entry: Entry point address.
  */
-void print_type_entry(unsigned char *e_ident, unsigned int e_type,
-		      unsigned long e_entry)
+void print_type_and_entry(unsigned char *e_ident, unsigned int e_type,
+			  unsigned long e_entry)
 {
 	int i;
 	unsigned long res = 0;
-	unsigned long src = e_entry;
 
 	if (e_ident[EI_DATA] == ELFDATA2MSB)
 	{
-		e_type = ((e_type >> 8) & 0xFF) | ((e_type & 0xFF) << 8);
+		e_type = (e_type >> 8) | (e_type << 8);
 		if (e_ident[EI_CLASS] == ELFCLASS32)
 		{
-			e_entry = ((e_entry & 0xFF000000) >> 24) |
-				  ((e_entry & 0x00FF0000) >> 8) |
+			e_entry = ((e_entry & 0x000000FF) << 24) |
 				  ((e_entry & 0x0000FF00) << 8) |
-				  ((e_entry & 0x000000FF) << 24);
+				  ((e_entry & 0x00FF0000) >> 8) |
+				  ((e_entry & 0xFF000000) >> 24);
 		}
 		else
 		{
 			for (i = 0; i < 8; i++)
 			{
-				res = (res << 8) | (src & 0xFF);
-				src >>= 8;
+				res = (res << 8) | (e_entry & 0xFF);
+				e_entry >>= 8;
 			}
 			e_entry = res;
 		}
@@ -213,7 +208,7 @@ int main(int argc, char *argv[])
 		e_entry = header.e_entry;
 	}
 
-	print_type_entry(header.e_ident, e_type, e_entry);
+	print_type_and_entry(header.e_ident, e_type, e_entry);
 
 	close(fd);
 	return (0);
